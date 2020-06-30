@@ -1,4 +1,5 @@
 #include "Bat.h"
+#include "Ball.h"
 #include <sstream>
 #include <cstdlib>
 #include <SFML/Graphics.hpp>
@@ -16,7 +17,7 @@ int main()
 	//create a bat at the bottom center of the screen
 	Bat bat(1920 / 2, 1080 - 20);
 	//add ball
-
+	Ball ball(1920 / 2, 0);
 	//create HUD
 	Text hud;
 
@@ -67,14 +68,50 @@ int main()
 		// Update the bat, the ball and the HUD  //
 		Time dt = clock.restart();
 		bat.update(dt);
+		ball.updateTime(dt);
 		//update hud text
 		std::stringstream ss;
 		ss << "Score: " << score << " Lives:" << lives;
 		hud.setString(ss.str());
+		//handle ball collision to bottom
+		if (ball.getPosition().top > window.getSize().y)
+		{
+			//reverse the ball
+			ball.reboundBottom();
+			//remove life
+			lives--;
+			//check for zero lives
+			if (lives < 1)
+			{
+				//reset the score
+				score = 0;
+				//reset lives
+				lives = 3;
+			}
+		}
+		//handle ball hiting top
+		if (ball.getPosition().top < 0)
+		{
+			ball.reboundBatOrTop();
+			//add the score
+			score++;
+		}
+		//handle ball collision to sides
+		if (ball.getPosition().left<0 || ball.getPosition().left + ball.getPosition().width>window.getSize().x)
+		{
+			ball.reboundSides();
+		}
+		//bat hitting the ball
+		if (ball.getPosition().intersects(bat.getPosition()))
+		{
+			//hit detected so reverse the ball
+			ball.reboundBatOrTop();
+		}
 		// Draw the bat, the ball and the HUD //
 		window.clear();
 		window.draw(hud);
 		window.draw(bat.getShape());
+		window.draw(ball.getShape());
 		window.display();
 		
 	}
